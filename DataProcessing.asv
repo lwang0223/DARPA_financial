@@ -1,0 +1,191 @@
+[rawPriceMat,rawTxt] = xlsread('VOL1.xlsx');
+tikNames = rawTxt(1,2:end);
+
+
+ %sum(isnan(rawPriceMat))
+ 
+%find(rawPriceMat == 0)
+ 
+
+%%%%%%Do the calculation on the *cleaned* data%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+retMat =[];
+%diffMat = [];
+
+%daily returns
+for ticker = 1:size(rawPriceMat,2)
+    retMat = [retMat diff(rawPriceMat(:,ticker))./rawPriceMat(1:end-1,ticker)];    
+    %retMat = [retMat diff(log(rawPriceMat(:,ticker)))];
+    %diffMat =  [diffMat diff(rawPriceMat(:,ticker))];
+end
+
+%%%%%%%%%%%%%Check stationarity of each return time%%%%%%%%%%%%%series%%%%%
+% hpMat = [];  %hVec contains the test results from Dickey-Fuller
+% 
+% for ticker = 1:size(retMat,2)
+%     [hValue,pValue,stat] = adftest(retMat(:,ticker));
+%     
+%     hpMat = [hpMat; [hValue pValue stat]];
+% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%Define sDimVec here%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sDimVec = 10*ones(size(compmStatesEWI,2),1);
+
+%%%%%%%%%%%%%%%Turn cell structure to a matrix and write to Excel%%%%%%%%%%
+bMat = [];
+statesMat = compmStatesEWI; %Finite discrete states matrix
+currentBMat = toBinaryStates(statesMat,sDimVec);
+
+for k = 1:length(currentBMat) %length of eq1BnryStatesEFI is # of tickers
+    bMat = [bMat currentBMat{k}];
+end
+csvwrite('compmBnryStatesEWI.csv',bMat);
+
+
+tikNodes = cell(0); %Contains node names
+for k = 1:length(currentBMat) %length of eq1BnryStatesEFI is # of tickers
+    
+    thisTik = tikNames{k};
+    thisTikNode = cell(0);
+    
+    for j = 1:sDimVec(k)
+        thisTikNode = [thisTikNode strcat(thisTik,'-',num2str(j))];
+    end
+    
+    tikNodes = [tikNodes thisTikNode];
+end
+xlswrite('compmNodeNames.xlsx',tikNodes);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%NAIVE discretization/binning%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%"equal width intervals (EWI)%%%%%%%%%%%%%%%%%%%%%%%
+%binNum = 10*ones(size(retMat,2),1); %At this moment, naively set at 10 for each
+% statesMat = [];
+% %rtpVec = [];
+% for ticker = 1:size(retMat,2)
+%     tikStatesVec = [];
+%     
+%     [freq, cters] = hist(retMat(:,ticker),binNum(ticker));
+%     
+%     for k = 1:size(retMat,1)
+%     tikState = -1; %unassigned
+%     rtp = min(find(cters >= retMat(k,ticker)));
+%     
+%     
+%     %Decide which bin
+%     if rtp == 1
+%         tikState = 1;
+%     elseif abs(retMat(k,ticker) - cters(rtp)) < abs(retMat(k,ticker) - cters(rtp-1))
+%         tikState = rtp;
+%     elseif abs(retMat(k,ticker) - cters(rtp)) > abs(retMat(k,ticker) - cters(rtp-1))
+%         tikState = rtp - 1;
+%     else  %rtp is empty (i.e. current number bigger than all bin centers)
+%         tikState = binNum(ticker); %Very last bin
+%     end    
+%     tikStatesVec = [tikStatesVec;tikState];
+%     end
+%     
+%     statesMat = [statesMat tikStatesVec];
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%Saving results%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% eq2StatesEWI = statesMat;
+% save('eq2StatesEWI.mat','eq2StatesEWI')
+
+
+%%%%%%%%%%%%%%%%%%%%%Naive Binning%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%Equal Frequency Intervals (EFI)%%%%%%%%%%%%%%%%%%%%%%
+statesMat = [];
+
+%can be changed
+Define the desired probabilities for each ticker
+pMat = cell(size(retMat,2),1);
+
+for ticker = 1:length(pMat)
+    pMat{ticker} = [0.1:0.1:1];
+end
+
+
+
+
+
+
+% pMat = [];
+% qMat = [];
+% for ticker = 1:size(retMat,2)
+%     pVec = [0.1:0.1:1]; %row vector, can differ ticker by ticker
+%     pMat = [pMat pVec'];
+%     
+%     qVec = quantile(retMat(:,ticker),pVec); %qVec is row vector
+%     qMat = [qMat qVec'];
+% end
+
+
+%quantile(retMat,pVec);  %each column corresponds to quantiles of retMat's column.
+
+%%Assign states
+
+% for ticker = 1:size(retMat,2)
+%     tikStatesVec = [];
+%     
+%     %tickProbVec = pMat(:,ticker);
+%     tikQuantiles = qMat(:,ticker); %quantiles for the current ticker
+%     
+%     for k = 1:size(retMat,1)
+%         %tikState = -1; %unassigned
+%         
+%         %Decide which label
+%         tikState = min(find(tikQuantiles >= retMat(k,ticker)));
+%         tikStatesVec = [tikStatesVec;tikState];     
+%     end
+%     
+%     statesMat = [statesMat tikStatesVec];
+%     
+% end
+
+%%%save%%%
+%  compmStatesEFI = statesMat;
+%  save('compmStatesEFI.mat','compmStatesEFI')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
